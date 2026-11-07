@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Huddle – Video calls</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1226; --surface:#181c3a; --surface-2:#20254a; --line:#2e3466;
+  --text:#f1f2fb; --muted:#9aa0cf; --accent:#7c5cff; --accent-2:#a08bff;
+  --ok:#34d399; --err:#ff6b81; --warn:#fbbf24;
+  --head:'Bricolage Grotesque',system-ui,sans-serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{font-family:var(--body);background:var(--bg);color:var(--text);line-height:1.5;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--head);line-height:1.1;letter-spacing:-.02em}
+button,input{font:inherit;color:inherit}
+.hidden{display:none!important}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+
+/* ---------- Auth page ---------- */
+.auth{min-height:100vh;min-height:100dvh;display:grid;grid-template-columns:1.05fr 1fr}
+.hero{position:relative;padding:48px;display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(160deg,#1b1f4a 0%,#0f1226 70%);overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--head);font-weight:800;font-size:1.35rem}
+.logo{width:38px;height:38px;border-radius:12px;background:var(--accent);display:grid;place-items:center}
+.logo svg{width:22px;height:22px;fill:#fff}
+.hero h1{font-size:clamp(2.2rem,4.2vw,3.6rem);max-width:12ch;margin-bottom:16px}
+.hero p{color:var(--muted);max-width:38ch}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:420px;margin-top:32px}
+.tile{aspect-ratio:1;border-radius:16px;background:var(--surface-2);border:1px solid var(--line);position:relative;display:grid;place-items:center;
+  font-family:var(--head);font-weight:700;font-size:1.3rem}
+.tile:nth-child(2){background:var(--accent)}
+.tile.live::after{content:"";position:absolute;top:10px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px #34d39933}
+.panel{display:flex;align-items:center;justify-content:center;padding:32px 20px}
+.card{width:100%;max-width:420px}
+.card h2{font-size:2rem;margin-bottom:6px}
+.card .sub{color:var(--muted);margin-bottom:24px}
+.field{margin-bottom:14px}
+label{display:block;font-size:.88rem;font-weight:600;margin-bottom:6px;color:#d6d9f5}
+.input-wrap{position:relative}
+input{width:100%;padding:13px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:1rem}
+input::placeholder{color:#6a70a6}
+input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px #7c5cff44}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;padding:8px;cursor:pointer;color:var(--muted);font-size:.8rem;font-weight:600}
+.btn{width:100%;padding:14px;border-radius:12px;border:0;font-weight:600;font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .1s,background .15s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover:not(:disabled){background:#6a49f0}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn-ghost:hover:not(:disabled){background:var(--surface)}
+.btn-google{background:#fff;color:#1f2340}
+.btn-google:hover:not(:disabled){background:#eef0ff}
+.btn-google svg{width:20px;height:20px}
+.divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.85rem;margin:18px 0}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.switch{text-align:center;margin-top:20px;color:var(--muted);font-size:.95rem}
+.link{background:none;border:0;color:var(--accent-2);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.alert{padding:12px 14px;border-radius:12px;font-size:.92rem;margin-bottom:16px;border:1px solid}
+.alert.err{background:#ff6b8114;border-color:#ff6b8155;color:#ffb3bf}
+.alert.warn{background:#fbbf2414;border-color:#fbbf2455;color:#fde08a}
+.alert.ok{background:#34d39914;border-color:#34d39955;color:#9bf0cf}
+.verify{text-align:center}
+.verify .mail{width:72px;height:72px;border-radius:22px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 20px}
+.verify .mail svg{width:34px;height:34px;stroke:var(--accent-2);fill:none;stroke-width:1.8}
+.verify strong{color:#fff;word-break:break-all}
+.verify .btn{margin-top:22px}
+.spinner{width:18px;height:18px;border:2.5px solid #ffffff55;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.btn-google .spinner{border-color:#00000033;border-top-color:#1f2340}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- App page ---------- */
+.app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-weight:700;flex:none;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.who-text{min-width:0}
+.who-text b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
+.who-text span{display:block;color:var(--muted);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-sm{width:auto;padding:9px 16px;font-size:.9rem}
+.main{flex:1;display:grid;grid-template-columns:1.3fr 1fr;gap:28px;padding:28px 20px;max-width:1100px;width:100%;margin:0 auto;align-items:start}
+.stage{position:relative;aspect-ratio:16/10;background:#080a1a;border:1px solid var(--line);border-radius:20px;overflow:hidden;display:grid;place-items:center}
+.stage video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.stage .off{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);padding:20px;background:#080a1a}
+.stage .off .avatar{width:84px;height:84px;font-size:2rem;margin:0 auto 12px}
+.controls{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:12px}
+.round{width:50px;height:50px;border-radius:50%;border:0;background:#ffffff26;backdrop-filter:blur(8px);cursor:pointer;display:grid;place-items:center}
+.round svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.round.off-state{background:var(--err)}
+.side h1{font-size:clamp(1.8rem,3vw,2.4rem);margin-bottom:8px}
+.side .sub{color:var(--muted);margin-bottom:24px}
+.row{display:flex;gap:10px}
+.row input{text-transform:uppercase;letter-spacing:.08em}
+.row .btn{width:auto;padding:13px 20px}
+.room{margin-top:16px;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.room code{font-size:1.9rem;letter-spacing:.18em;font-weight:800;color:var(--accent-2)}
+.note{margin-top:20px;color:var(--muted);font-size:.85rem}
+
+/* ---------- Call screen ---------- */
+.call{position:fixed;inset:0;z-index:20;background:#080a1a;display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.call-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.call-top code{font-size:1.6rem;letter-spacing:.18em;font-weight:700;color:var(--accent-2)}
+.grid{flex:1;min-height:0;display:grid;gap:10px;padding:10px;grid-template-columns:1fr;grid-auto-rows:minmax(0,1fr)}
+.grid[data-n="3"],.grid[data-n="4"],.grid[data-n="5"],.grid[data-n="6"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ctile{position:relative;min-height:0;background:#141836;border-radius:16px;overflow:hidden}
+.ctile video{width:100%;height:100%;object-fit:cover;display:block}
+.ctile video.mirror{transform:scaleX(-1)}
+.cname{position:absolute;left:10px;bottom:10px;background:#000a;padding:3px 10px;border-radius:99px;font-size:.8rem;max-width:80%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.waiting b{color:var(--accent-2);letter-spacing:.14em}
+.waiting{text-align:center;color:var(--muted);font-size:.9rem;padding:0 16px 6px}
+.call-bar{display:flex;justify-content:center;gap:14px;padding:12px;background:var(--surface);border-top:1px solid var(--line)}
+.call-bar .round{width:54px;height:54px;background:var(--surface-2)}
+.call-bar .round.off-state{background:var(--err)}
+.call-bar .round.leave{background:var(--err)}
+.call-bar .round.leave svg{transform:rotate(135deg)}
+@media (min-width:861px){
+  .grid[data-n="2"],.grid[data-n="3"],.grid[data-n="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid[data-n="5"],.grid[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .auth{grid-template-columns:1fr}
+  .hero{padding:24px 20px 28px}
+  .hero h1{font-size:2rem;margin-bottom:10px}
+  .tiles,.hero p{display:none}
+  .hero .copy{margin-top:20px}
+  .panel{padding:24px 16px 40px;align-items:flex-start}
+  .main{grid-template-columns:1fr;gap:22px;padding:18px 16px 32px}
+}
+@media (max-width:420px){
+  .who-text span{display:none}
+  .row{flex-direction:column}
+  .row .btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH PAGE ===================== -->
+<main id="authPage" class="auth hidden">
+  <section class="hero">
+    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M15 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1.5l5 3.5V6l-5 3.5V8z"/></svg></span>Huddle</div>
+    <div class="copy">
+      <h1>Face-to-face, from anywhere.</h1>
+      <p>Start a video call in seconds. Create your account, verify your email, and jump in.</p>
+      <div class="tiles" aria-hidden="true">
+        <div class="tile live">A</div><div class="tile">M</div><div class="tile">S</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="card">
+
+      <!-- Login -->
+      <div id="loginView">
+        <h2>Welcome back</h2>
+        <p class="sub">Log in to start or join a call.</p>
+        <div id="loginAlert"></div>
+        <form id="loginForm" novalidate>
+          <div class="field"><label for="lEmail">Email</label>
+            <input id="lEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+          <div class="field"><label for="lPass">Password</label>
+            <div class="input-wrap"><input id="lPass" type="password" autocomplete="current-password" placeholder="Your password" required>
+            <button type="button" class="eye" data-eye="lPass">Show</button></div></div>
+          <button class="btn btn-primary" id="loginBtn" type="submit">Log in</button>
+        </form>
+        <div class="divider">or</div>
+        <button class="btn btn-google" data-google type="button"></button>
+        <p class="switch">New here? <button class="link" data-go="signup" type="button">Create an account</button></p>
+      </div>
+
+      <!-- Sign up -->
+      <div id="signupView" class="hidden">
+        <h2>Create your account</h2>
+        <p class="sub">It takes less than a minute.</p>
+        <div id="signupAlert"></div>
+        <form id="signupForm" novalidate>
+          <div class="field"><label for="sName">Full name</label>
+            <input id="sName" type="text" autocomplete="name" placeholder="Alex Morgan" required></div>
+          <div class="field"><label for="sEmail">Email</label>
+            <input id="sEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+          <div class="field"><label for="sPass">Password</label>
+            <div class="input-wrap"><input id="sPass" type="password" autocomplete="new-password" placeholder="At least 6 characters" required>
+            <button type="button" class="eye" data-eye="sPass">Show</button></div></div>
+          <div class="field"><label for="sPass2">Re-type password</label>
+            <div class="input-wrap"><input id="sPass2" type="password" autocomplete="new-password" placeholder="Type it again" required>
+            <button type="button" class="eye" data-eye="sPass2">Show</button></div></div>
+          <button class="btn btn-primary" id="signupBtn" type="submit">Sign up</button>
+        </form>
+        <div class="divider">or</div>
+        <button class="btn btn-google" data-google type="button"></button>
+        <p class="switch">Already have an account? <button class="link" data-go="login" type="button">Log in</button></p>
+      </div>
+
+      <!-- Check your email -->
+      <div id="verifyView" class="verify hidden">
+        <div class="mail"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></div>
+        <h2>Check your email</h2>
+        <p class="sub">We sent a verification link to <strong id="verifyEmail"></strong>. Open it, then come back and log in.</p>
+        <button class="btn btn-primary" data-go="login" type="button">Login</button>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- ===================== APP PAGE (verified users only) ===================== -->
+<div id="appPage" class="app hidden">
+  <header class="top">
+    <div class="who">
+      <div class="avatar" id="avatar"></div>
+      <div class="who-text"><b id="uName"></b><span id="uEmail"></span></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Log out</button>
+  </header>
+
+  <div class="main">
+    <section>
+      <div class="stage">
+        <video id="preview" autoplay playsinline muted></video>
+        <div class="off" id="camOff">
+          <div><div class="avatar" id="bigAvatar"></div><span id="camMsg">Camera is off</span></div>
+        </div>
+        <div class="controls">
+          <button class="round" id="micBtn" type="button" aria-label="Toggle microphone">
+            <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          <button class="round" id="camBtn" type="button" aria-label="Toggle camera">
+            <svg viewBox="0 0 24 24"><path d="M15 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1.5l5 3.5V6l-5 3.5z"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="side">
+      <h1 id="hello"></h1>
+      <p class="sub">Check how you look and sound, then start a meeting or join with a code.</p>
+      <button class="btn btn-primary" id="newMeeting" type="button">Start new meeting</button>
+      <div class="room hidden" id="roomBox">
+        <div><small style="color:var(--muted)">Your meeting code</small><br><code id="roomCode"></code></div>
+        <button class="btn btn-ghost btn-sm" id="copyCode" type="button">Copy</button>
+      </div>
+      <div class="divider">or join</div>
+      <form class="row" id="joinForm">
+        <input id="joinCode" type="text" placeholder="6-character code" maxlength="6" aria-label="Meeting code">
+        <button class="btn btn-ghost" type="submit">Join</button>
+      </form>
+      <p class="note" id="joinNote"></p>
+    </section>
+  </div>
+</div>
+
+<!-- ===================== CALL PAGE ===================== -->
+<div id="callPage" class="call hidden">
+  <header class="call-top">
+    <div><small style="color:var(--muted)">Meeting code</small><br><code id="callCode"></code></div>
+    <button class="btn btn-ghost btn-sm" id="cCopy" type="button">Copy code</button>
+  </header>
+  <div class="grid" id="grid" data-n="1"></div>
+  <p class="waiting" id="waiting">Waiting for others. Share the code <b id="waitCode"></b> so they can join.</p>
+  <div class="call-bar">
+    <button class="round" id="cMic" type="button" aria-label="Toggle microphone">
+      <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <button class="round" id="cCam" type="button" aria-label="Toggle camera">
+      <svg viewBox="0 0 24 24"><path d="M15 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1.5l5 3.5V6l-5 3.5z"/></svg></button>
+    <button class="round leave" id="cLeave" type="button" aria-label="Leave meeting">
+      <svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
+  updateProfile, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
+
+// Your Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAH5g5dc5HTBU69G5LZj6KBxoevsb62AKY",
+  authDomain: "videoweb-d8747.firebaseapp.com",
+  projectId: "videoweb-d8747",
+  storageBucket: "videoweb-d8747.firebasestorage.app",
+  messagingSenderId: "622696070158",
+  appId: "1:622696070158:web:a62371b1afddccf134105f",
+  measurementId: "G-DTLH9ZW2L2"
+};
+
+// ---------- Supabase (meetings database + realtime signaling) ----------
+const SUPABASE_URL = "https://ixbjgtfeklnynbxjzdzb.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ypEkRtTT3_pzHezIakLGxQ_4UbU-WEf";
+
+// ---------- WebRTC servers ----------
+// STUN lets most devices connect across different networks.
+// For 100% reliability on strict networks (company Wi-Fi, some mobile carriers) add a TURN server.
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" }
+  // { urls: "turn:YOUR_TURN_HOST:443?transport=tcp", username: "USER", credential: "PASSWORD" }
+];
+
+const sb = /^https?:\/\//.test(SUPABASE_URL) && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith("your")
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+const app = initializeApp(firebaseConfig);
+try { getAnalytics(app); } catch (e) { /* analytics unavailable (blocked or unsupported) */ }
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const views = { login: $('loginView'), signup: $('signupView'), verify: $('verifyView') };
+const googleIcon = '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.8-4.6l-7.9-6.2A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>';
+const googleLabel = (t) => googleIcon + '<span>' + t + '</span>';
+document.querySelectorAll('[data-google]').forEach((b, i) => {
+  b.innerHTML = googleLabel(i === 0 ? 'Continue with Google' : 'Sign up with Google');
+});
+
+let holdVerifyScreen = false;   // keeps "check your email" screen visible after sign-up
+
+function show(name) {
+  Object.entries(views).forEach(([k, el]) => el.classList.toggle('hidden', k !== name));
+  ['loginAlert', 'signupAlert'].forEach((id) => ($(id).innerHTML = ''));
+}
+function alertBox(id, type, msg) {
+  $(id).innerHTML = '<div class="alert ' + type + '" role="alert"></div>';
+  $(id).firstChild.textContent = msg;
+}
+function busy(btn, on, label) {
+  if (btn.dataset.google !== undefined) {
+    btn.disabled = on;
+    btn.innerHTML = on ? '<span class="spinner"></span>' : googleLabel(label);
+    return;
+  }
+  btn.disabled = on;
+  btn.innerHTML = on ? '<span class="spinner"></span>' : label;
+}
+function friendly(e) {
+  const m = {
+    'auth/email-already-in-use': 'That email already has an account. Try logging in.',
+    'auth/invalid-email': 'Enter a valid email address.',
+    'auth/weak-password': 'Password must be at least 6 characters.',
+    'auth/invalid-credential': 'Email or password is incorrect.',
+    'auth/user-not-found': 'No account found for that email.',
+    'auth/wrong-password': 'Email or password is incorrect.',
+    'auth/too-many-requests': 'Too many attempts. Wait a moment and try again.',
+    'auth/network-request-failed': 'Network problem. Check your connection.',
+    'auth/popup-closed-by-user': 'Google sign-in was closed before finishing.',
+    'auth/cancelled-popup-request': 'Google sign-in was cancelled.',
+    'auth/popup-blocked': 'Your browser blocked the Google popup. Allow popups and try again.',
+    'auth/unauthorized-domain': 'This domain is not authorized in Firebase Console → Authentication → Settings → Authorized domains.',
+    'auth/operation-not-allowed': 'This sign-in method is not enabled in Firebase Console → Authentication → Sign-in method.'
+  };
+  return m[e.code] || 'Something went wrong. Please try again.';
+}
+const looksLikeEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+/* ---------- navigation between login / sign up ---------- */
+document.querySelectorAll('[data-go]').forEach((b) =>
+  b.addEventListener('click', () => { holdVerifyScreen = false; show(b.dataset.go); }));
+document.querySelectorAll('[data-eye]').forEach((b) =>
+  b.addEventListener('click', () => {
+    const inp = $(b.dataset.eye);
+    const showIt = inp.type === 'password';
+    inp.type = showIt ? 'text' : 'password';
+    b.textContent = showIt ? 'Hide' : 'Show';
+  }));
+
+/* ---------- sign up (no auto login) ---------- */
+$('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = $('sName').value.trim();
+  const email = $('sEmail').value.trim();
+  const pass = $('sPass').value;
+  const pass2 = $('sPass2').value;
+
+  if (!name) return alertBox('signupAlert', 'err', 'Enter your full name.');
+  if (!looksLikeEmail(email)) return alertBox('signupAlert', 'err', 'Enter a valid email address.');
+  if (pass.length < 6) return alertBox('signupAlert', 'err', 'Password must be at least 6 characters.');
+  if (pass !== pass2) return alertBox('signupAlert', 'err', 'Passwords do not match.');
+
+  const btn = $('signupBtn');
+  busy(btn, true);
+  holdVerifyScreen = true;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: name });
+    await sendEmailVerification(cred.user);
+    await signOut(auth);                       // do NOT stay logged in
+    $('verifyEmail').textContent = email;
+    show('verify');
+    $('signupForm').reset();
+  } catch (err) {
+    holdVerifyScreen = false;
+    alertBox('signupAlert', 'err', friendly(err));
+  } finally {
+    busy(btn, false, 'Sign up');
+  }
+});
+
+/* ---------- log in (email must be verified) ---------- */
+$('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = $('lEmail').value.trim();
+  const pass = $('lPass').value;
+  if (!looksLikeEmail(email)) return alertBox('loginAlert', 'err', 'Enter a valid email address.');
+  if (!pass) return alertBox('loginAlert', 'err', 'Enter your password.');
+
+  const btn = $('loginBtn');
+  busy(btn, true);
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    if (!cred.user.emailVerified) {
+      await signOut(auth);                     // block unverified users
+      $('loginAlert').innerHTML = '';
+      const box = document.createElement('div');
+      box.className = 'alert warn';
+      box.setAttribute('role', 'alert');
+      box.innerHTML = 'Your email is not verified yet. Open the link we sent to <b></b>, then log in again. ';
+      box.querySelector('b').textContent = email;
+      const resend = document.createElement('button');
+      resend.type = 'button'; resend.className = 'link'; resend.textContent = 'Resend email';
+      resend.addEventListener('click', async () => {
+        resend.disabled = true;
+        try {
+          const c = await signInWithEmailAndPassword(auth, email, pass);
+          if (!c.user.emailVerified) await sendEmailVerification(c.user);
+          await signOut(auth);
+          alertBox('loginAlert', 'ok', 'Verification email sent. Check your inbox (and spam).');
+        } catch (er) { alertBox('loginAlert', 'err', friendly(er)); }
+      });
+      box.appendChild(resend);
+      $('loginAlert').appendChild(box);
+    }
+  } catch (err) {
+    alertBox('loginAlert', 'err', friendly(err));
+  } finally {
+    busy(btn, false, 'Log in');
+  }
+});
+
+/* ---------- Google sign in / sign up ---------- */
+document.querySelectorAll('[data-google]').forEach((btn) => {
+  const label = btn.textContent.trim();
+  btn.addEventListener('click', async () => {
+    const alertId = views.signup.classList.contains('hidden') ? 'loginAlert' : 'signupAlert';
+    busy(btn, true, label);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      alertBox(alertId, 'err', friendly(err));
+    } finally {
+      busy(btn, false, label);
+    }
+  });
+});
+
+/* ---------- auth state: only verified users reach the app ---------- */
+let stream = null, micOn = true, camOn = true;
+
+onAuthStateChanged(auth, (user) => {
+  if (user && user.emailVerified) {
+    $('authPage').classList.add('hidden');
+    $('appPage').classList.remove('hidden');
+    renderUser(user);
+    startMedia();
+  } else {
+    if (call) leaveCall();
+    stopMedia();
+    $('callPage').classList.add('hidden');
+    $('appPage').classList.add('hidden');
+    $('authPage').classList.remove('hidden');
+    const anyVisible = Object.values(views).some((el) => !el.classList.contains('hidden'));
+    if (!anyVisible) show('login');   // first load: show the login form
+  }
+});
+
+$('logoutBtn').addEventListener('click', async () => {
+  await leaveCall();
+  await signOut(auth);
+  show('login');
+});
+
+/* ---------- app page ---------- */
+function renderUser(user) {
+  const name = user.displayName || user.email.split('@')[0];
+  const initial = name.trim().charAt(0).toUpperCase();
+  $('uName').textContent = name;
+  $('uEmail').textContent = user.email;
+  $('hello').textContent = 'Hi, ' + name.split(' ')[0];
+  $('avatar').textContent = initial;
+  $('bigAvatar').textContent = initial;
+  if (user.photoURL) {
+    const img = new Image();
+    img.src = user.photoURL; img.alt = ''; img.referrerPolicy = 'no-referrer';
+    img.onload = () => { $('avatar').textContent = ''; $('avatar').appendChild(img); };
+  }
+}
+
+async function startMedia() {
+  if (stream) return;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    $('preview').srcObject = stream;
+    micOn = camOn = true;
+    syncControls();
+  } catch (e) {
+    $('camMsg').textContent = 'Allow camera and microphone access to preview yourself';
+    $('camOff').classList.remove('hidden');
+  }
+}
+function stopMedia() {
+  if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
+  $('preview').srcObject = null;
+}
+function syncControls() {
+  $('micBtn').classList.toggle('off-state', !micOn);
+  $('camBtn').classList.toggle('off-state', !camOn);
+  $('camOff').classList.toggle('hidden', camOn && !!stream);
+  if (stream) $('camMsg').textContent = 'Camera is off';
+}
+$('micBtn').addEventListener('click', () => {
+  if (!stream) return startMedia();
+  micOn = !micOn; stream.getAudioTracks().forEach((t) => (t.enabled = micOn)); syncControls();
+});
+$('camBtn').addEventListener('click', () => {
+  if (!stream) return startMedia();
+  camOn = !camOn; stream.getVideoTracks().forEach((t) => (t.enabled = camOn)); syncControls();
+});
+
+/* ---------- Meetings (Supabase DB) + calls (WebRTC, Supabase Realtime signaling) ---------- */
+let call = null;
+const note = (m, isErr) => { $('joinNote').textContent = m; $('joinNote').style.color = isErr ? 'var(--err)' : ''; };
+const myName = () => { const u = auth.currentUser; return (u && (u.displayName || u.email.split('@')[0])) || 'Guest'; };
+
+function dbHint(e) {
+  const m = (e && e.message) || '';
+  const c = e && e.code;
+  if (c === 'PGRST205' || c === '42P01' || /schema cache|does not exist/i.test(m)) return 'The tables are missing. Run supabase.sql in the Supabase SQL Editor.';
+  if (c === '42501' || /row-level security|permission denied/i.test(m)) return 'Permission denied. Re-run supabase.sql to add the access rules.';
+  if (c === '23514') return 'The database still expects the old code format. Run the "update" SQL at the top of supabase.sql.';
+  if (/invalid api key|jwt/i.test(m)) return 'The Supabase key looks wrong. Check SUPABASE_ANON_KEY.';
+  if (/failed to fetch|networkerror/i.test(m)) return 'Cannot reach Supabase. Check SUPABASE_URL.';
+  return m || 'Check your Supabase setup.';
+}
+
+function makeCode() {            // 6 characters, e.g. K7M2QX
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let c = '';
+  for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random() * chars.length)];
+  return c;
+}
+const normCode = (v) => v.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+$('newMeeting').addEventListener('click', async () => {
+  if (!sb) return note('Add your SUPABASE_URL and SUPABASE_ANON_KEY at the top of the script first.', true);
+  const btn = $('newMeeting');
+  busy(btn, true);
+  note('');
+  try {
+    let code = null;
+    for (let i = 0; i < 5 && !code; i++) {
+      const c = makeCode();
+      $('roomCode').textContent = c;                 // show the code right away
+      $('roomBox').classList.remove('hidden');
+      const { error } = await sb.from('meetings').insert({ code: c, host_uid: auth.currentUser.uid, host_name: myName() });
+      if (!error) code = c; else if (error.code !== '23505') throw error;
+    }
+    if (!code) throw new Error('Could not create a meeting code. Try again.');
+    note('Meeting created. Share this code, then allow camera access to start.');
+    await enterCall(code);
+  } catch (e) {
+    console.error(e);
+    $('roomBox').classList.add('hidden');
+    note('Could not start the meeting: ' + dbHint(e), true);
+  } finally { busy(btn, false, 'Start new meeting'); }
+});
+
+$('copyCode').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('roomCode').textContent); $('copyCode').textContent = 'Copied'; }
+  catch { $('copyCode').textContent = 'Copy failed'; }
+  setTimeout(() => ($('copyCode').textContent = 'Copy'), 1500);
+});
+
+$('joinForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!sb) return note('Add your SUPABASE_URL and SUPABASE_ANON_KEY at the top of the script first.', true);
+  const code = normCode($('joinCode').value);
+  if (code.length !== 6) return note('Enter the 6-character meeting code.', true);
+  try {
+    const { data, error } = await sb.from('meetings').select('code,is_active').eq('code', code).maybeSingle();
+    if (error) throw error;
+    if (!data) return note('No meeting found with that code.', true);
+    if (!data.is_active) return note('That meeting has ended.', true);
+    note('');
+    await enterCall(code);
+  } catch (err) {
+    console.error(err);
+    note('Could not join: ' + dbHint(err), true);
+  }
+});
+
+async function enterCall(code) {
+  await startMedia();
+  if (!stream) return note('Allow camera and microphone access to start the call. Your code is ' + code + '.', true);
+  const myId = crypto.randomUUID();
+  $('appPage').classList.add('hidden');
+  $('callPage').classList.remove('hidden');
+  $('callCode').textContent = code;
+  $('waitCode').textContent = code;
+  $('grid').innerHTML = '';
+  addTile(myId, 'You', stream, true);
+  paintCall();
+
+  const channel = sb.channel('room:' + code, { config: { broadcast: { self: false }, presence: { key: myId } } });
+  call = { code, myId, channel, peers: new Map(), logId: null };
+  channel.on('broadcast', { event: 'signal' }, ({ payload }) => onSignal(payload));
+  channel.on('presence', { event: 'sync' }, syncPeers);
+  channel.on('presence', { event: 'leave' }, ({ key }) => removePeer(key));
+  channel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') channel.track({ name: myName() });
+  });
+
+  try {   // log the join in the database
+    const { data } = await sb.from('participants')
+      .insert({ meeting_code: code, user_uid: auth.currentUser.uid, user_name: myName() }).select('id').single();
+    if (call) call.logId = data && data.id;
+  } catch (e) { /* logging is optional */ }
+}
+
+function peerName(id) {
+  const st = call && call.channel.presenceState()[id];
+  return (st && st[0] && st[0].name) || 'Guest';
+}
+
+// Everyone sees the same presence list. The peer with the larger id sends the offer (no clashes).
+function syncPeers() {
+  if (!call) return;
+  const state = call.channel.presenceState();
+  Object.keys(state).forEach((id) => {
+    if (id === call.myId) return;
+    const label = document.querySelector('#tile-' + CSS.escape(id) + ' .cname');
+    if (label) label.textContent = peerName(id);
+    if (!call.peers.has(id) && call.myId > id) createPeer(id, true);
+  });
+}
+
+function send(to, type, data) {
+  if (call) call.channel.send({ type: 'broadcast', event: 'signal', payload: { from: call.myId, to, type, data } });
+}
+
+function createPeer(id, initiator) {
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  const peer = { pc, queue: [] };
+  call.peers.set(id, peer);
+  stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+  pc.onicecandidate = (e) => { if (e.candidate) send(id, 'ice', e.candidate.toJSON()); };
+  pc.ontrack = (e) => addTile(id, peerName(id), e.streams[0], false);
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'failed' && initiator) {
+      pc.createOffer({ iceRestart: true }).then((o) => pc.setLocalDescription(o)).then(() => send(id, 'offer', pc.localDescription));
+    }
+  };
+  if (initiator) {
+    pc.createOffer().then((o) => pc.setLocalDescription(o)).then(() => send(id, 'offer', pc.localDescription));
+  }
+  return peer;
+}
+
+async function flushQueue(peer) {
+  while (peer.queue.length) {
+    try { await peer.pc.addIceCandidate(peer.queue.shift()); } catch (e) { /* ignore stale candidate */ }
+  }
+}
+
+async function onSignal({ from, to, type, data }) {
+  if (!call || to !== call.myId) return;
+  const peer = call.peers.get(from) || createPeer(from, false);
+  const pc = peer.pc;
+  try {
+    if (type === 'offer') {
+      await pc.setRemoteDescription(data);
+      await flushQueue(peer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      send(from, 'answer', pc.localDescription);
+    } else if (type === 'answer') {
+      await pc.setRemoteDescription(data);
+      await flushQueue(peer);
+    } else if (type === 'ice') {
+      if (pc.remoteDescription) await pc.addIceCandidate(data); else peer.queue.push(data);
+    }
+  } catch (e) { console.error('signal error', e); }
+}
+
+function removePeer(id) {
+  if (!call) return;
+  const peer = call.peers.get(id);
+  if (peer) { peer.pc.close(); call.peers.delete(id); }
+  const t = $('tile-' + id);
+  if (t) t.remove();
+  updateGrid();
+}
+
+function addTile(id, name, mediaStream, local) {
+  let t = $('tile-' + id);
+  if (!t) {
+    t = document.createElement('div');
+    t.className = 'ctile';
+    t.id = 'tile-' + id;
+    t.innerHTML = '<video autoplay playsinline></video><span class="cname"></span>';
+    $('grid').appendChild(t);
+  }
+  const v = t.querySelector('video');
+  v.srcObject = mediaStream;
+  v.muted = !!local;
+  v.classList.toggle('mirror', !!local);
+  t.querySelector('.cname').textContent = name;
+  updateGrid();
+}
+
+function updateGrid() {
+  const n = $('grid').children.length;
+  $('grid').dataset.n = Math.min(Math.max(n, 1), 6);
+  $('waiting').classList.toggle('hidden', n > 1);
+}
+
+function paintCall() {
+  $('cMic').classList.toggle('off-state', !micOn);
+  $('cCam').classList.toggle('off-state', !camOn);
+}
+$('cMic').addEventListener('click', () => {
+  micOn = !micOn; stream.getAudioTracks().forEach((t) => (t.enabled = micOn)); paintCall(); syncControls();
+});
+$('cCam').addEventListener('click', () => {
+  camOn = !camOn; stream.getVideoTracks().forEach((t) => (t.enabled = camOn)); paintCall(); syncControls();
+});
+$('cCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('callCode').textContent); $('cCopy').textContent = 'Copied'; }
+  catch { $('cCopy').textContent = 'Copy failed'; }
+  setTimeout(() => ($('cCopy').textContent = 'Copy code'), 1500);
+});
+$('cLeave').addEventListener('click', leaveCall);
+
+async function leaveCall() {
+  if (!call) return;
+  const c = call;
+  call = null;
+  const alone = c.peers.size === 0;
+  c.peers.forEach((p) => p.pc.close());
+  try { await sb.removeChannel(c.channel); } catch (e) {}
+  $('grid').innerHTML = '';
+  $('callPage').classList.add('hidden');
+  $('joinNote').textContent = '';
+  $('roomBox').classList.add('hidden');
+  if (auth.currentUser && auth.currentUser.emailVerified) $('appPage').classList.remove('hidden');
+  try {
+    const now = new Date().toISOString();
+    if (c.logId) await sb.from('participants').update({ left_at: now }).eq('id', c.logId);
+    if (alone) await sb.from('meetings').update({ is_active: false, ended_at: now }).eq('code', c.code);
+  } catch (e) {}
+}
+</script>
+</body>
+</html>
