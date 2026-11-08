@@ -774,6 +774,7 @@ async function enterCall(code) {
   }, 1000);
   updateGrid();
   channel.on('broadcast', { event: 'signal' }, ({ payload }) => onSignal(payload));
+  channel.on('broadcast', { event: 'end' }, () => { if (call) leaveCall('The call was ended by the other person.'); });
   channel.on('presence', { event: 'sync' }, syncPeers);
   channel.on('presence', { event: 'leave' }, ({ key }) => removePeer(key));
   channel.subscribe((status) => {
@@ -847,6 +848,8 @@ function createPeer(id, initiator) {
   const pc = new RTCPeerConnection({ iceServers: call.iceServers });
   const peer = { pc, queue: [], sent: false, initiator, retried: false, timer: null };
   call.peers.set(id, peer);
+  call.hadPeer = true;
+  clearTimeout(call.endTimer);
   stream.getTracks().forEach((t) => pc.addTrack(t, stream));
   if (initiator) {   // audio-only users can still receive the other person's video
     if (!stream.getVideoTracks().length) pc.addTransceiver('video', { direction: 'recvonly' });
@@ -911,6 +914,12 @@ function removePeer(id) {
   if (!call) return;
   const peer = call.peers.get(id);
   if (peer) { clearTimeout(peer.timer); peer.pc.close(); call.peers.delete(id); }
+  if (call.hadPeer && call.peers.size === 0) {
+    clearTimeout(call.endTimer);
+    call.endTimer = setTimeout(() => {
+      if (call && call.peers.size === 0) leaveCall('The other person left the call.');
+    }, 4000);
+  }
   const t = $('tile-' + id);
   if (t) t.remove();
   updateGrid();
@@ -996,26 +1005,38 @@ $('cCopy').addEventListener('click', async () => {
   catch { $('cCopy').textContent = 'Copy failed'; }
   setTimeout(() => ($('cCopy').textContent = 'Copy invite'), 1500);
 });
-$('cLeave').addEventListener('click', leaveCall);
+$('cLeave').addEventListener('click', endCall);
+
+// End button: in a 1-to-1 call the call ends for both people at the same time.
+// In a group call (3+ people) only you leave and the others stay connected.
+async function endCall() {
+  if (!call) return;
+  const both = call.peers.size === 1;
+  if (both) {
+    try { await call.channel.send({ type: 'broadcast', event: 'end', payload: { from: call.myId } }); } catch (e) {}
+  }
+  await leaveCall('', both);
+}
 window.addEventListener('pagehide', () => { if (call) { try { call.channel.untrack(); } catch (e) {} } });
 
-async function leaveCall() {
+async function leaveCall(msg, endMeeting) {
   if (!call) return;
   const c = call;
   call = null;
   clearInterval(c.timerId);
+  clearTimeout(c.endTimer);
   const alone = c.peers.size === 0;
   c.peers.forEach((p) => { clearTimeout(p.timer); p.pc.close(); });
   try { await sb.removeChannel(c.channel); } catch (e) {}
   $('grid').innerHTML = '';
   $('callPage').classList.add('hidden');
-  $('joinNote').textContent = '';
+  note(typeof msg === 'string' ? msg : '');
   $('roomBox').classList.add('hidden');
   if (auth.currentUser && auth.currentUser.emailVerified) $('appPage').classList.remove('hidden');
   try {
     const now = new Date().toISOString();
     if (c.logId) await sb.from('participants').update({ left_at: now }).eq('id', c.logId);
-    if (alone) await sb.from('meetings').update({ is_active: false, ended_at: now }).eq('code', c.code);
+    if (alone || endMeeting) await sb.from('meetings').update({ is_active: false, ended_at: now }).eq('code', c.code);
   } catch (e) {}
 }
 </script>
