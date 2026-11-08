@@ -106,31 +106,45 @@ input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px #7c5cff
 .room code{font-size:1.9rem;letter-spacing:.18em;font-weight:800;color:var(--accent-2)}
 .note{margin-top:20px;color:var(--muted);font-size:.85rem}
 
-/* ---------- Call screen ---------- */
-.call{position:fixed;inset:0;z-index:20;background:#080a1a;display:flex;flex-direction:column;
-  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-.call-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
-.call-top code{font-size:1.6rem;letter-spacing:.18em;font-weight:700;color:var(--accent-2)}
-.grid{flex:1;min-height:0;display:grid;gap:10px;padding:10px;grid-template-columns:1fr;grid-auto-rows:minmax(0,1fr)}
+/* ---------- Call screen (full-screen video, small self view, labeled buttons) ---------- */
+.call{position:fixed;inset:0;z-index:20;background:#000;display:flex;flex-direction:column;overflow:hidden}
+.call-top{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+  padding:calc(env(safe-area-inset-top) + 12px) 16px 30px;background:linear-gradient(#000a,#0000)}
+.ctitle{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ctitle b{font-family:var(--head);font-size:1.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctitle span{font-size:.85rem;color:#e1e3ff}
+.ctitle code{letter-spacing:.14em;font-weight:700;color:var(--accent-2)}
+.call-top .btn{background:#ffffff26;border:0;backdrop-filter:blur(8px)}
+.grid{position:relative;flex:1;min-height:0;display:grid;gap:8px;grid-template-columns:1fr;grid-auto-rows:minmax(0,1fr);
+  padding:calc(env(safe-area-inset-top) + 76px) 8px calc(env(safe-area-inset-bottom) + 124px)}
 .grid[data-n="3"],.grid[data-n="4"],.grid[data-n="5"],.grid[data-n="6"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:861px){.grid[data-n="5"],.grid[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .ctile{position:relative;min-height:0;background:#141836;border-radius:16px;overflow:hidden}
 .ctile video{width:100%;height:100%;object-fit:cover;display:block}
 .ctile video.mirror{transform:scaleX(-1)}
+/* 1 or 2 people: one big picture + small picture (tap the small one to swap) */
+.grid.pip{display:block;padding:0;gap:0}
+.grid.pip .ctile{position:absolute}
+.grid.pip .ctile.big{inset:0;border-radius:0}
+.grid.pip .ctile.small{right:14px;bottom:calc(env(safe-area-inset-bottom) + 122px);width:30%;max-width:190px;min-width:100px;
+  aspect-ratio:3/4;border-radius:18px;z-index:4;cursor:pointer;box-shadow:0 8px 24px #0009;border:1px solid #ffffff40}
+.grid.pip .cname{display:none}
+.grid.pip .small .cstatus{font-size:.7rem;padding:6px}
 .cname{position:absolute;left:10px;bottom:10px;background:#000a;padding:3px 10px;border-radius:99px;font-size:.8rem;max-width:80%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cstatus{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;color:#cfd3ff;background:#141836d9;font-size:.95rem}
-.tapsound{position:absolute;top:10px;right:10px;border:0;border-radius:99px;padding:8px 14px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+.tapsound{position:absolute;top:10px;right:10px;z-index:3;border:0;border-radius:99px;padding:8px 14px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
 .stage .off .btn{max-width:100%}
-.waiting b{color:var(--accent-2);letter-spacing:.14em}
-.waiting{text-align:center;color:var(--muted);font-size:.9rem;padding:0 16px 6px}
-.call-bar{display:flex;justify-content:center;gap:14px;padding:12px;background:var(--surface);border-top:1px solid var(--line)}
-.call-bar .round{width:54px;height:54px;background:var(--surface-2)}
-.call-bar .round.off-state{background:var(--err)}
-.call-bar .round.leave{background:var(--err)}
-.call-bar .round.leave svg{transform:rotate(135deg)}
-@media (min-width:861px){
-  .grid[data-n="2"],.grid[data-n="3"],.grid[data-n="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid[data-n="5"],.grid[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
+.waiting{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 134px);z-index:5;text-align:center;color:#fff;font-size:.95rem;padding:0 20px;text-shadow:0 1px 6px #000}
+.waiting b{color:#c9bcff;letter-spacing:.14em}
+.call-bar{position:absolute;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:16px;
+  padding:30px 12px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(#0000,#000b)}
+.cb{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;color:#fff;width:68px}
+.cb .circle{width:60px;height:60px;border-radius:50%;background:#ffffff33;backdrop-filter:blur(10px);display:grid;place-items:center;transition:background .15s}
+.cb .circle svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cb small{font-size:.75rem;color:#e8e9ff}
+.cb.off-state .circle{background:#fff}
+.cb.off-state .circle svg{stroke:#1f2340}
+.cb.leave .circle{background:var(--err)}
 
 /* ---------- Responsive ---------- */
 @media (max-width:860px){
@@ -243,6 +257,8 @@ input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px #7c5cff
         <div class="controls">
           <button class="round" id="micBtn" type="button" aria-label="Toggle microphone">
             <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          <button class="round hidden" id="flipBtn" type="button" aria-label="Flip camera">
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M3 21v-5h5M21 3v5h-5"/></svg></button>
           <button class="round" id="camBtn" type="button" aria-label="Toggle camera">
             <svg viewBox="0 0 24 24"><path d="M15 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1.5l5 3.5V6l-5 3.5z"/></svg></button>
         </div>
@@ -270,18 +286,20 @@ input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px #7c5cff
 <!-- ===================== CALL PAGE ===================== -->
 <div id="callPage" class="call hidden">
   <header class="call-top">
-    <div><small style="color:var(--muted)">Meeting code</small><br><code id="callCode"></code></div>
+    <div class="ctitle"><b id="callTitle">Meeting</b><span><span id="callTimer">0:00</span> · Code <code id="callCode"></code></span></div>
     <button class="btn btn-ghost btn-sm" id="cCopy" type="button">Copy invite</button>
   </header>
-  <div class="grid" id="grid" data-n="1"></div>
+  <div class="grid pip" id="grid" data-n="1"></div>
   <p class="waiting" id="waiting">Waiting for others. Share the code <b id="waitCode"></b> so they can join.</p>
   <div class="call-bar">
-    <button class="round" id="cMic" type="button" aria-label="Toggle microphone">
-      <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-    <button class="round" id="cCam" type="button" aria-label="Toggle camera">
-      <svg viewBox="0 0 24 24"><path d="M15 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1.5l5 3.5V6l-5 3.5z"/></svg></button>
-    <button class="round leave" id="cLeave" type="button" aria-label="Leave meeting">
-      <svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></button>
+    <button class="cb hidden" id="cFlip" type="button" aria-label="Flip camera">
+      <span class="circle"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M3 21v-5h5M21 3v5h-5"/></svg></span><small>flip</small></button>
+    <button class="cb" id="cCam" type="button" aria-label="Toggle camera">
+      <span class="circle"><svg viewBox="0 0 24 24"><path d="M15 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1.5l5 3.5V6l-5 3.5z"/></svg></span><small id="cCamLbl">video</small></button>
+    <button class="cb" id="cMic" type="button" aria-label="Toggle microphone">
+      <span class="circle"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><small id="cMicLbl">mute</small></button>
+    <button class="cb leave" id="cLeave" type="button" aria-label="End call">
+      <span class="circle"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span><small>end</small></button>
   </div>
 </div>
 
@@ -315,8 +333,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_ypEkRtTT3_pzHezIakLGxQ_4UbU-WEf";
 // For calls that work on ANY network you also need a TURN relay. Easiest free option:
 //   1) Sign up at https://www.metered.ca (free plan)   2) Dashboard -> TURN Server
 //   3) Copy your App name and API key into the two lines below.
-const METERED_APP = "videoweb";       // example: "huddle"  (your address is huddle.metered.live)
-const METERED_API_KEY = "6aef7f1dcab9c70b07a89e7c";   // example: "a1b2c3..."
+const METERED_APP = "videoweb";
+const METERED_API_KEY = "6aef7f1dcab9c70b07a89e7c";
 const ICE_SERVERS = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" }
@@ -565,17 +583,22 @@ async function startMedia() {
     }
     if (!stream) { setPerm(mediaErrorText(e), true); return null; }
   }
+  facing = 'user';
   hasVideo = stream.getVideoTracks().length > 0;
   micOn = stream.getAudioTracks().length > 0;
   camOn = hasVideo;
   $('preview').srcObject = stream;
+  setLocalMirror();
   syncControls();
+  updateFlip();
   return stream;
 }
 function stopMedia() {
   if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
   hasVideo = false;
+  facing = 'user';
   $('preview').srcObject = null;
+  updateFlip();
   $('camMsg').textContent = DEFAULT_PERM_MSG;
   $('camMsg').style.color = '';
   syncControls();
@@ -599,6 +622,45 @@ async function autoStartIfGranted() {   // skip the prompt if permission was alr
     if (c.state === 'granted' && m.state === 'granted') startMedia();
   } catch (e) { /* not supported (e.g. Safari): wait for the button */ }
 }
+let facing = 'user';
+function setLocalMirror() {
+  const m = facing === 'user';
+  $('preview').style.transform = m ? 'scaleX(-1)' : 'none';
+  document.querySelectorAll('.ctile[data-local] video').forEach((v) => v.classList.toggle('mirror', m));
+}
+async function updateFlip() {       // show the flip button only when the device has 2+ cameras
+  let multi = false;
+  try { multi = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput').length > 1; } catch (e) {}
+  const show = hasVideo && multi;
+  ['flipBtn', 'cFlip'].forEach((id) => $(id).classList.toggle('hidden', !show));
+}
+async function flipCamera() {
+  if (!stream || !hasVideo) return;
+  const next = facing === 'user' ? 'environment' : 'user';
+  const old = stream.getVideoTracks()[0];
+  const open = (mode) => navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: mode }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  let ns;
+  old.stop();                       // most phones cannot open two cameras at once
+  try { ns = await open(next); facing = next; }
+  catch (e) { try { ns = await open(facing); } catch (e2) { console.error(e2); return; } }
+  const nt = ns.getVideoTracks()[0];
+  nt.enabled = camOn;
+  stream.removeTrack(old);
+  stream.addTrack(nt);
+  if (call) {
+    for (const p of call.peers.values()) {
+      const sender = p.pc.getSenders().find((x) => x.track && x.track.kind === 'video');
+      if (sender) { try { await sender.replaceTrack(nt); } catch (e) { console.error(e); } }
+    }
+  }
+  [$('preview'), ...document.querySelectorAll('.ctile[data-local] video')].forEach((v) => {
+    v.srcObject = null; v.srcObject = stream; const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
+  });
+  setLocalMirror();
+}
+$('flipBtn').addEventListener('click', flipCamera);
+$('cFlip').addEventListener('click', flipCamera);
 $('permBtn').addEventListener('click', startMedia);
 $('micBtn').addEventListener('click', () => {
   if (!stream) return startMedia();
@@ -703,7 +765,14 @@ async function enterCall(code) {
   const iceServers = await loadIceServers();
 
   const channel = sb.channel('room:' + code, { config: { broadcast: { self: false }, presence: { key: myId } } });
-  call = { code, myId, channel, peers: new Map(), logId: null, iceServers };
+  call = { code, myId, channel, peers: new Map(), logId: null, iceServers, selfBig: false, timerId: null };
+  const started = Date.now();
+  $('callTimer').textContent = '0:00';
+  call.timerId = setInterval(() => {
+    const sec = Math.floor((Date.now() - started) / 1000);
+    $('callTimer').textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  }, 1000);
+  updateGrid();
   channel.on('broadcast', { event: 'signal' }, ({ payload }) => onSignal(payload));
   channel.on('presence', { event: 'sync' }, syncPeers);
   channel.on('presence', { event: 'leave' }, ({ key }) => removePeer(key));
@@ -733,6 +802,7 @@ function syncPeers() {
     if (label) label.textContent = peerName(id);
     if (!call.peers.has(id) && call.myId > id) createPeer(id, true);
   });
+  updateGrid();
 }
 
 function send(to, type, data) {
@@ -853,12 +923,16 @@ function addTile(id, name, mediaStream, local) {
     t.className = 'ctile';
     t.id = 'tile-' + id;
     t.innerHTML = '<video autoplay playsinline></video><span class="cname"></span><div class="cstatus hidden"></div><button class="tapsound hidden" type="button">Tap to turn on sound</button>';
+    if (local) t.dataset.local = '1';
+    t.addEventListener('click', () => {            // tap the small picture to make it big
+      if (call && t.classList.contains('small')) { call.selfBig = !call.selfBig; updateGrid(); }
+    });
     $('grid').appendChild(t);
   }
   const v = t.querySelector('video');
   v.muted = !!local;
   v.onplaying = () => setStatus(id, '');
-  v.classList.toggle('mirror', !!local);
+  v.classList.toggle('mirror', !!local && facing === 'user');
   t.querySelector('.cname').textContent = name;
   if (mediaStream && v.srcObject !== mediaStream) {
     v.srcObject = mediaStream;
@@ -880,14 +954,33 @@ function setStatus(id, text) {
 }
 
 function updateGrid() {
-  const n = $('grid').children.length;
-  $('grid').dataset.n = Math.min(Math.max(n, 1), 6);
+  const grid = $('grid');
+  const tiles = [...grid.children];
+  const n = tiles.length;
+  grid.dataset.n = Math.min(Math.max(n, 1), 6);
   $('waiting').classList.toggle('hidden', n > 1);
+  const pip = n <= 2;
+  grid.classList.toggle('pip', pip);
+  tiles.forEach((t) => t.classList.remove('big', 'small'));
+  if (pip && n === 1) tiles[0].classList.add('big');
+  if (pip && n === 2) {
+    const localT = tiles.find((t) => t.dataset.local);
+    const remoteT = tiles.find((t) => !t.dataset.local);
+    const selfBig = call && call.selfBig;
+    (selfBig ? localT : remoteT).classList.add('big');
+    (selfBig ? remoteT : localT).classList.add('small');
+  }
+  if (call) {
+    $('callTitle').textContent = n <= 1 ? 'Waiting…'
+      : n === 2 ? peerName(tiles.find((t) => !t.dataset.local).id.slice(5)) : (n - 1) + ' people';
+  }
 }
 
 function paintCall() {
   $('cMic').classList.toggle('off-state', !micOn);
   $('cCam').classList.toggle('off-state', !camOn);
+  $('cMicLbl').textContent = micOn ? 'mute' : 'unmute';
+  $('cCamLbl').textContent = camOn ? 'video' : 'video off';
 }
 $('cMic').addEventListener('click', () => {
   if (!stream.getAudioTracks().length) return;
@@ -910,6 +1003,7 @@ async function leaveCall() {
   if (!call) return;
   const c = call;
   call = null;
+  clearInterval(c.timerId);
   const alone = c.peers.size === 0;
   c.peers.forEach((p) => { clearTimeout(p.timer); p.pc.close(); });
   try { await sb.removeChannel(c.channel); } catch (e) {}
